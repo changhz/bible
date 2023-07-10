@@ -3,7 +3,7 @@ import flag
 
 const (
 	data_root = $env('DATA_ROOT')
-	alefbet = '׃ אבגדהוזחטיכלמנסעפצקרשתםןףץך'
+	alefbet = '׀־׃ אבגדהוזחטיכלמנסעפצקרשתםןףץך'
 )
 
 fn main() {
@@ -56,7 +56,7 @@ fn main() {
 		verses := additional_args[2]
 	}
 
-	if !booklist.contains(book) {
+	if !booklist.contains(book.to_lower()) {
 		eprintln("Invalid book name '$book'")
 		return
 	}
@@ -67,20 +67,44 @@ fn main() {
 
 	path += file
 	txt := os.read_file(path)!
-	cleaned := clean(txt.split('\n')[2..].join('\n'))
-	println(cleaned.join('').trim(' '))
+	cleaned := clean(txt.split('\n')[2..].join('\n')).join_lines()
+	println(cleaned)
 
-	println(additional_args.join_lines())
-	println(fprs.usage())
+	// println(additional_args.join_lines())
+	// println(fprs.usage())
 }
 
 
 fn clean(txt string) []string {
-	mut cleaned := []string{}
+	mut longest := 0
 	for line in txt.split('\n') {
+		if line == '' {continue}
+
+		mut len := 0
 		for ch in line.runes() {
-			if alefbet.contains(ch.str()) {cleaned << ch.str()}
+			if alefbet.contains(ch.str()) {len += 1}
+		}
+
+		if len > longest {
+			longest = len
 		}
 	}
-	return cleaned
+
+	mut lines := []string{}
+	mut cleaned := []rune{}
+	mut lc := 1
+	for line in txt.split('\n') {
+		if line == '' {continue}
+		for ch in line.runes() {
+			if alefbet.contains(ch.str()) {cleaned << ch}
+			// cleaned << ch
+		}
+		ln := cleaned.reverse().map(it.str()).join('')
+		mut pad := ''
+		for _ in 0 .. longest-cleaned.len {pad += ' '}
+		lines << pad + ln + " $lc"
+		cleaned = []
+		lc += 1
+	}
+	return lines
 }
