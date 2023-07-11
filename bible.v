@@ -1,6 +1,5 @@
 import os
 import flag
-import term
 
 const (
 	data_root = $env('DATA_ROOT')
@@ -15,19 +14,45 @@ fn main() {
 	fprs.skip_executable()
 
 	listbooks := fprs.bool('list', `l`, false, 'List books')
-	mut version := fprs.string('version', `v`, 'kjv', 'Bible version')
+	listvers := fprs.bool('list-versions', `s`, false, 'List versions')
+	mut version := fprs.string('version', `v`, 'kjv', 'Set bible version')
 	mut keyword := fprs.string('keyword', `k`, '', 'Search keyword')
 
+	if listvers {
+		output := os.execute("ls $data_root").output
+		println(output)
+		return
+	}
+
 	if keyword != '' {
+		if version == 'wlc' {
+			keyword = keyword.runes().reverse().map(it.str()).join('')
+			if !os.exists('tmp.txt') {
+				path := "$data_root/$version/"
+				list := os.execute("ls $path")
+				mut filtered := ''
+				for file in list.output.split('\n') {
+					if file == '' {continue}
+					txt := os.read_file(path+file)!
+					filtered += filter(txt.split('\n')[2..].join_lines(), false, file).join_lines()+'\n'
+				}
+				os.write_file('tmp.txt', filtered) or {
+					eprintln("Failed to write file: tmp.txt")
+					return
+				}
+			}
+			output := os.execute("grep -i '$keyword' tmp.txt").output
+			println(output)
+			return
+		}
+
 		output := os.execute("grep -i '$keyword' $data_root/$version/*").output
 		if output == '' { return }
 		for line in output.split('\n') {
 			if line == '' {continue}
 			parts := line.split('.txt:')
 			ref := parts[0].split('/').last()
-			mut txt := parts[1]
-			segments := txt.split(keyword)
-			txt = segments[0]+ term.bright_red(keyword) +segments[1]
+			txt := parts[1]
 			println("$ref: $txt")
 		}
 		return
@@ -101,7 +126,7 @@ fn main() {
 
 	mut filtered := []string{}
 	if version == 'wlc' {
-		filtered = filter(lines.join('\n'))
+		filtered = filter(lines.join('\n'), true, '')
 	}
 	else {
 		for ln in 0 .. lines.len-1 {
@@ -130,7 +155,7 @@ fn main() {
 	println(filtered.join_lines())
 }
 
-fn filter(txt string) []string {
+fn filter(txt string, addpad bool, prfx string) []string {
 	mut longest := 0
 	for line in txt.split('\n') {
 		if line == '' {continue}
@@ -156,8 +181,8 @@ fn filter(txt string) []string {
 		}
 		ln := filtered.reverse().map(it.str()).join('')
 		mut pad := ''
-		for _ in 0 .. longest-filtered.len {pad += ' '}
-		lines << pad + ln + " $lc"
+		if addpad { for _ in 0 .. longest-filtered.len {pad += ' '} }
+		lines << prfx + pad + ln + " $lc"
 		filtered = []
 		lc += 1
 	}
