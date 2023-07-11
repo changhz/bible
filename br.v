@@ -39,10 +39,14 @@ fn main() {
 	books := "$ot, $nt"
 
 	if listbooks {
-		println(books)
+		println("Old Testament")
+		println(ot)
+		println("New Testament")
+		println(nt)
 		return
 	}
 
+	booklist_ot := ot.split(',').map(it.trim(' \n\t'))
 	booklist := books.split(',').map(it.trim(' \n\t'))
 
 	if additional_args.len < 2 {
@@ -51,14 +55,20 @@ fn main() {
 	}
 
 	book := additional_args[0]
-	chapter := additional_args[1]
+	chapter := additional_args[1].int()
+	if chapter < 1 {
+		eprintln("Invalid chapter number")
+		return
+	}
 	mut verses := ''
 	if additional_args.len == 3 {
 		verses = additional_args[2]
 	}
 
-	if !booklist.contains(book.to_lower()) {
-		eprintln("Invalid book name '$book'")
+	if (version == 'wlc' && !booklist_ot.contains(book.to_lower()))
+		|| !booklist.contains(book.to_lower())
+	{
+		eprintln("'$book' is not found in ${version.to_upper()}")
 		return
 	}
 
@@ -85,12 +95,17 @@ fn main() {
 	if verses != '' {
 		parts := verses.split(':')
 		from := parts[0].int() - 1
-		if from < 1 {
-			eprintln("Invalid verse number")
-			return
-		}
 		mut to := from + 1
 		if parts.len > 1 {to = parts[1].int()}
+
+		if to < from {
+			to = filtered.len
+		}
+
+		if from < 1 || to > filtered.len || from > filtered.len {
+			eprintln("This chapter has $filtered.len verses")
+			return
+		}
 
 		filtered = filtered[from .. to]
 	}
