@@ -1,2 +1,2 @@
-# br
-Bible Reader
+# bible
+CLI Bible

@@ -3,7 +3,7 @@ data/
 
 # Binaries for programs and plugins
 main
-br
+bible
 *.exe
 *.exe~
 *.so

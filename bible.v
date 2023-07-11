@@ -9,9 +9,9 @@ const (
 
 fn main() {
 	mut fprs := flag.new_flag_parser(os.args)
-	fprs.application('br')
+	fprs.application('bible')
 	fprs.version('0.0.1')
-	fprs.description('Bible Reader')
+	fprs.description('CLI Bible')
 	fprs.skip_executable()
 
 	listbooks := fprs.bool('list', `l`, false, 'List books')
@@ -67,7 +67,7 @@ fn main() {
 	booklist := books.split(',').map(it.trim(' \n\t'))
 
 	if additional_args.len < 2 {
-		println("Usage: br BOOK CHAPTER [VERSES] [OPTIONS]")
+		println("Usage: bible BOOK CHAPTER [VERSES] [OPTIONS]")
 		return
 	}
 
