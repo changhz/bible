@@ -35,14 +35,6 @@ fn main() {
 		return
 	}
 
-	pages := [
-		050, 040, 027, 036, 034, 024, 021, 004,
-		031, 024, 022, 025, 029, 036, 010, 013,
-		010, 042, 150, 031, 012, 008, 066, 052,
-		005, 048, 012, 014, 004, 009, 001, 004,
-		007, 003, 003, 003, 002, 014, 003
-	]
-
 	booklist := books.split(',').map(it.trim(' \n\t'))
 
 	if additional_args.len < 2 {
@@ -52,8 +44,9 @@ fn main() {
 
 	book := additional_args[0]
 	chapter := additional_args[1]
+	mut verses := ''
 	if additional_args.len == 3 {
-		verses := additional_args[2]
+		verses = additional_args[2]
 	}
 
 	if !booklist.contains(book.to_lower()) {
@@ -63,19 +56,29 @@ fn main() {
 
 	mut path := "$data_root/$version/"
 	list := os.execute("ls $path | awk '/${book.to_upper()}/ && /$chapter/'")
-	file := list.output.trim(' \n')
+	files := list.output.split('\n')
+	// println(files)
 
-	path += file
+	path += files[0]
 	txt := os.read_file(path)!
-	cleaned := clean(txt.split('\n')[2..].join('\n')).join_lines()
-	println(cleaned)
+	mut filtered := filter(txt.split('\n')[2..].join('\n'))
+	if verses != '' {
+		parts := verses.split(':')
+		from := parts[0].int() - 1
+		if from < 1 {
+			eprintln("Invalid verse number")
+			return
+		}
+		mut to := from + 1
+		if parts.len > 1 {to = parts[1].int()}
 
-	// println(additional_args.join_lines())
-	// println(fprs.usage())
+		filtered = filtered[from .. to]
+	}
+
+	println(filtered.join_lines())
 }
 
-
-fn clean(txt string) []string {
+fn filter(txt string) []string {
 	mut longest := 0
 	for line in txt.split('\n') {
 		if line == '' {continue}
@@ -91,19 +94,19 @@ fn clean(txt string) []string {
 	}
 
 	mut lines := []string{}
-	mut cleaned := []rune{}
+	mut filtered := []rune{}
 	mut lc := 1
 	for line in txt.split('\n') {
 		if line == '' {continue}
 		for ch in line.runes() {
-			if alefbet.contains(ch.str()) {cleaned << ch}
-			// cleaned << ch
+			if alefbet.contains(ch.str()) {filtered << ch}
+			// filtered << ch
 		}
-		ln := cleaned.reverse().map(it.str()).join('')
+		ln := filtered.reverse().map(it.str()).join('')
 		mut pad := ''
-		for _ in 0 .. longest-cleaned.len {pad += ' '}
+		for _ in 0 .. longest-filtered.len {pad += ' '}
 		lines << pad + ln + " $lc"
-		cleaned = []
+		filtered = []
 		lc += 1
 	}
 	return lines
