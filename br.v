@@ -1,5 +1,6 @@
 import os
 import flag
+import term
 
 const (
 	data_root = $env('DATA_ROOT')
@@ -15,6 +16,22 @@ fn main() {
 
 	listbooks := fprs.bool('list', `l`, false, 'List books')
 	mut version := fprs.string('version', `v`, 'kjv', 'Bible version')
+	mut keyword := fprs.string('keyword', `k`, '', 'Search keyword')
+
+	if keyword != '' {
+		output := os.execute("grep -i '$keyword' $data_root/$version/*").output
+		if output == '' { return }
+		for line in output.split('\n') {
+			if line == '' {continue}
+			parts := line.split('.txt:')
+			ref := parts[0].split('/').last()
+			mut txt := parts[1]
+			segments := txt.split(keyword)
+			txt = segments[0]+ term.bright_red(keyword) +segments[1]
+			println("$ref: $txt")
+		}
+		return
+	}
 
 	additional_args := fprs.finalize() or {
 		eprintln(err)
