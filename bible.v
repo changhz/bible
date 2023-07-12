@@ -16,7 +16,7 @@ fn main() {
 	listbooks := fprs.bool('list', `l`, false, 'List books')
 	listvers := fprs.bool('list-versions', `s`, false, 'List versions')
 	mut version := fprs.string('version', `v`, 'kjv', 'Set bible version')
-	mut keyword := fprs.string('keyword', `k`, '', 'Search keyword')
+	mut keyword := fprs.string('keyword', `k`, '', 'Search for keyword')
 
 	if listvers {
 		output := os.execute("ls $data_root").output
@@ -92,7 +92,9 @@ fn main() {
 	booklist := books.split(',').map(it.trim(' \n\t'))
 
 	if additional_args.len < 2 {
-		println("Usage: bible BOOK CHAPTER [VERSES] [OPTIONS]")
+		println(fprs.usage())
+		println('Examples')
+		println('bible psa 2 1:4')
 		return
 	}
 
@@ -144,8 +146,8 @@ fn main() {
 			to = filtered.len
 		}
 
-		if from < 1 || to > filtered.len || from > filtered.len {
-			eprintln("This chapter has $filtered.len verses")
+		if from < 0 || to > filtered.len || from > filtered.len {
+			eprintln("Verse number out of range: this chapter has $filtered.len verses")
 			return
 		}
 
