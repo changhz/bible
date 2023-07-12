@@ -41,12 +41,12 @@ fn main() {
 					return
 				}
 			}
-			output := os.execute("grep -i '$keyword' tmp.txt").output
+			output := os.execute("grep -iE '$keyword' tmp.txt").output
 			println(output)
 			return
 		}
 
-		output := os.execute("grep -i '$keyword' $data_root/$version/*").output
+		output := os.execute("grep -iE '$keyword' $data_root/$version/*").output
 		if output == '' { return }
 		for line in output.split('\n') {
 			if line == '' {continue}
@@ -93,8 +93,9 @@ fn main() {
 
 	if additional_args.len < 2 {
 		println(fprs.usage())
-		println('Examples')
+		println('\nExamples:')
 		println('bible psa 2 1:4')
+		println('bible -k messiah')
 		return
 	}
 
