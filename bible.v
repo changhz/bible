@@ -25,12 +25,6 @@ fn main() {
 		return
 	}
 
-	if listverses {
-		output := os.execute("grep -iE '$keyword' $data_root/$version/*").output
-		println(output)
-		return
-	}
-
 	if keyword != '' {
 		if version == 'wlc' {
 			keyword = keyword.runes().reverse().map(it.str()).join('')
@@ -104,6 +98,37 @@ fn main() {
 		println('bible jdg')
 		println('bible psa 2 1:4')
 		println('bible -k messiah')
+		println('bible -r 3:18')
+		return
+	}
+
+	mut path := "$data_root/$version/"
+
+	if listverses {
+		// TODO:
+		target := additional_args[0]
+		chapter := target.split(':')[0].trim(' ').int()
+		verse := target.split(':')[1].trim(' ').int()
+
+		output := os.execute("ls $path").output.split('\n')
+		mut c := 0
+		mut current_book := ''
+		for book_chap in output {
+			if book_chap.trim(' ') == '' {return}
+			book_name := book_chap[0..3]
+			if book_name != current_book {
+				current_book = book_name
+				c = 0
+			}
+			c += 1
+			if c != chapter {continue}
+			txt := os.read_file("$path/$book_chap")!
+			lines := txt.split('\n')[2..]
+			if lines.len-1 < verse {continue}
+			println("$book_name $chapter:$verse")
+			println(lines[verse-1])
+			println('')
+		}
 		return
 	}
 
@@ -126,10 +151,9 @@ fn main() {
 		return
 	}
 
-	mut path := "$data_root/$version/"
-
 	if chapter < 1 {
-		println(os.execute("ls $path | grep -i $book | wc -l").output)
+		n := os.execute("ls $path | grep -i $book | wc -l").output.trim(' ').int()
+		println(n)
 		return
 	}
 
