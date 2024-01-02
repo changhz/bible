@@ -14,12 +14,19 @@ fn main() {
 	fprs.skip_executable()
 
 	listbooks := fprs.bool('list', `l`, false, 'List books')
+	listverses := fprs.bool('list-verses', `r`, false, 'List verses')
 	listvers := fprs.bool('list-versions', `s`, false, 'List versions')
 	mut version := fprs.string('version', `v`, 'kjv', 'Set bible version')
 	mut keyword := fprs.string('keyword', `k`, '', 'Search for keyword')
 
 	if listvers {
 		output := os.execute("ls $data_root").output
+		println(output)
+		return
+	}
+
+	if listverses {
+		output := os.execute("grep -iE '$keyword' $data_root/$version/*").output
 		println(output)
 		return
 	}
@@ -91,20 +98,22 @@ fn main() {
 	booklist_ot := ot.split(',').map(it.trim(' \n\t'))
 	booklist := books.split(',').map(it.trim(' \n\t'))
 
-	if additional_args.len < 2 {
+	if additional_args.len < 1 {
 		println(fprs.usage())
 		println('\nExamples:')
+		println('bible jdg')
 		println('bible psa 2 1:4')
 		println('bible -k messiah')
 		return
 	}
 
 	book := additional_args[0]
-	chapter := additional_args[1].int()
-	if chapter < 1 {
-		eprintln("Invalid chapter number")
-		return
+	mut chapter := 0
+
+	if additional_args.len > 1 {
+		chapter = additional_args[1].int()
 	}
+
 	mut verses := ''
 	if additional_args.len == 3 {
 		verses = additional_args[2]
@@ -118,6 +127,12 @@ fn main() {
 	}
 
 	mut path := "$data_root/$version/"
+
+	if chapter < 1 {
+		println(os.execute("ls $path | grep -i $book | wc -l").output)
+		return
+	}
+
 	list := os.execute("ls $path | awk '/${book.to_upper()}/ && /$chapter/'")
 	files := list.output.split('\n')
 	// println(files)
@@ -152,7 +167,7 @@ fn main() {
 			return
 		}
 
-		filtered = filtered[from .. to]
+		filtered = filtered.clone()[from .. to]
 	}
 
 	println(filtered.join_lines())
