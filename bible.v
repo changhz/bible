@@ -47,14 +47,18 @@ fn main() {
 			return
 		}
 
-		output := os.execute("grep -iE '$keyword' $data_root/$version/*").output
+		output := os.execute("grep -iEn '$keyword' $data_root/$version/*").output
 		if output == '' { return }
 		for line in output.split('\n') {
 			if line == '' {continue}
 			parts := line.split('.txt:')
 			ref := parts[0].split('/').last()
-			txt := parts[1]
-			println("$ref: $txt")
+			mut txt := parts[1]
+			book_name := ref[0..3]
+			book_chap := ref.split('_')[1]
+			verse_num := txt.split(':')[0].trim(' ').int() - 2
+			txt = txt.split(':')[1]
+			println("$book_name $book_chap:$verse_num $txt")
 		}
 		return
 	}
